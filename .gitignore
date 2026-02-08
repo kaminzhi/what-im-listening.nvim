@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# Binary executables
+UniversalMediaTool
+macos/UniversalMediaTool
