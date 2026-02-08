@@ -21,10 +21,6 @@ function M.setup(opts)
     cache.clear()
     commands.create_commands(cfg)
     
-    vim.api.nvim_create_user_command("MediaTestConfig", function()
-        commands.test_config(cfg)
-    end, { desc = "Test media status configuration" })
-    
     vim.api.nvim_create_user_command("MediaReload", function()
         M.reload()
         vim.notify("Media Status plugin reloaded", vim.log.levels.INFO)
@@ -35,24 +31,6 @@ function M.setup(opts)
         M.refresh()
         vim.notify("Media status cache refreshed", vim.log.levels.INFO)
     end, { desc = "Refresh media status cache immediately" })
-    
-    vim.api.nvim_create_user_command("MediaDebugLualine", function()
-        provider.fetch(function(info)
-            if info then
-                local current_cfg = config.get()
-                local lualine_result = current_cfg.formats.lualine_format(info, current_cfg)
-                print("Current lualine format result:", lualine_result)
-                print("Raw info:")
-                print("  - Source:", info.source)
-                print("  - Title:", info.title)
-                print("  - Artist:", info.artist)
-                print("  - Progress:", info.progress)
-                print("Cached lualine:", cache.get_lualine())
-            else
-                print("No media playing")
-            end
-        end)
-    end, { desc = "Debug lualine format" })
     
     timer.start(cfg)
 end
