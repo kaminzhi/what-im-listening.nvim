@@ -19,6 +19,14 @@ M.defaults = {
     },
     
     progress_width = 15,
+    
+    -- Keyboard mappings for media control
+    keymaps = {
+        play_pause = "<leader>mp",  -- Toggle play/pause
+        next = "<leader>mn",        -- Next track  
+        previous = "<leader>mP",    -- Previous track
+        status = "<leader>ms"       -- Show media status
+    }
 }
 
 M.current = vim.deepcopy(M.defaults)
