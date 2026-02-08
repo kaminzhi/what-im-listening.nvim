@@ -20,6 +20,52 @@ class UniversalMediaProvider {
     
     // Get media info using nowplaying-cli
     private func getNowPlayingFromCLI() -> [String: Any]? {
+        guard let allInfo = runCLICommand(args: ["get", "title", "artist", "album", "duration", "elapsedTime", "playbackRate"]),
+              !allInfo.isEmpty else {
+            return nil
+        }
+        
+        // Parse the multi-line output
+        let lines = allInfo.components(separatedBy: .newlines)
+        guard lines.count >= 6 else {
+            return getNowPlayingIndividually()
+        }
+        
+        let title = lines[0].trimmingCharacters(in: .whitespacesAndNewlines)
+        let artist = lines[1].trimmingCharacters(in: .whitespacesAndNewlines)
+        let album = lines[2].trimmingCharacters(in: .whitespacesAndNewlines)
+        let durationStr = lines[3].trimmingCharacters(in: .whitespacesAndNewlines)
+        let elapsedTimeStr = lines[4].trimmingCharacters(in: .whitespacesAndNewlines)
+        let playbackRateStr = lines[5].trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !title.isEmpty && !artist.isEmpty else {
+            return nil
+        }
+        
+        let duration = Double(durationStr) ?? 0
+        let elapsed = Double(elapsedTimeStr) ?? 0
+        let playbackRate = Double(playbackRateStr) ?? 0
+        
+        let isPlaying = playbackRate > 0
+        let progress = duration > 0 ? min(100, Int((elapsed / duration) * 100)) : 0
+        
+        let source = detectMediaSource(title: title, artist: artist)
+        
+        return [
+            "title": title,
+            "artist": artist,
+            "album": album,
+            "duration": Int(duration * 1000), // Convert to milliseconds
+            "elapsed": elapsed,
+            "progress": progress,
+            "is_playing": isPlaying,
+            "playback_rate": playbackRate,
+            "source": source,
+            "status": isPlaying ? "playing" : "paused"
+        ]
+    }
+    
+    private func getNowPlayingIndividually() -> [String: Any]? {
         guard let title = runCLICommand(args: ["get", "title"]),
               let artist = runCLICommand(args: ["get", "artist"]),
               !title.isEmpty, !artist.isEmpty else {
@@ -54,7 +100,6 @@ class UniversalMediaProvider {
         ]
     }
     
-    // Execute nowplaying-cli command
     private func runCLICommand(args: [String]) -> String? {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/nowplaying-cli")
@@ -64,9 +109,21 @@ class UniversalMediaProvider {
         task.standardOutput = pipe
         task.standardError = Pipe()
         
+        let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
+            if task.isRunning {
+                task.terminate()
+            }
+        }
+        
         do {
             try task.run()
             task.waitUntilExit()
+            timeoutTimer.invalidate()
+            
+            // Only proceed if task completed successfully
+            guard task.terminationStatus == 0 else {
+                return nil
+            }
             
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -74,6 +131,7 @@ class UniversalMediaProvider {
             return output?.isEmpty == false ? output : nil
             
         } catch {
+            timeoutTimer.invalidate()
             return nil
         }
     }
