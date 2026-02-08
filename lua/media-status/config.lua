@@ -2,7 +2,7 @@ local M = {}
 local icons = require("media-status.icons")
 
 M.defaults = {
-    update_interval = 2500,  -- Update interval (ms)
+    update_interval = 1000,  -- Update interval (ms)
     max_width = 0,           -- Max width for status bar (0=unlimited)
     
     show_progress = true,
@@ -21,7 +21,6 @@ M.defaults = {
     progress_width = 15,
 }
 
--- Global config storage
 M.current = vim.deepcopy(M.defaults)
 
 function M.setup(user_config)

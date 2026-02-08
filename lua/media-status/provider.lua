@@ -30,27 +30,22 @@ local function parse_media_json(json_str)
 end
 
 function M.fetch(callback)
-    vim.schedule(function()
-        -- Get path to UniversalMediaTool
-        local script_path = debug.getinfo(1).source:match("@?(.*/)")
-        local tool_path = script_path .. "../../macos/UniversalMediaTool"
-        
-        local handle = io.popen(tool_path .. " 2>&1")
-        if not handle then
-            callback(nil)
-            return
-        end
-        
-        local result = handle:read("*a")
-        local success, exit_type, exit_code = handle:close()
-        
-        if not success or result == "" then
-            callback(nil)
-            return
-        end
-        
-        local parsed = parse_media_json(result)
-        callback(parsed)
+    local script_path = debug.getinfo(1).source:match("@?(.*/)") 
+    local tool_path = script_path .. "../../macos/UniversalMediaTool"
+    
+    vim.system({ tool_path }, {
+        timeout = 3000, 
+        text = true,
+    }, function(result)
+        vim.schedule(function()
+            if result.code ~= 0 or not result.stdout or result.stdout == "" then
+                callback(nil)
+                return
+            end
+            
+            local parsed = parse_media_json(result.stdout)
+            callback(parsed)
+        end)
     end)
 end
 

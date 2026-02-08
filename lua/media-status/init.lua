@@ -75,7 +75,7 @@ function M.refresh()
         if info then
             local status = cfg.formats.status_format(info, cfg, cfg.max_width)
             local lualine = cfg.formats.lualine_format(info, cfg)
-            cache.update_all(status, lualine)
+            cache.update_all(status, lualine, info)
         else
             cache.clear()
         end
