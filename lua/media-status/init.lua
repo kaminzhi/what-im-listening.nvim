@@ -10,31 +10,56 @@ local timer = require("media-status.timer")
 local provider = require("media-status.provider")
 local utils = require("media-status.utils")
 
+-- Utility function for creating commands with consistent notification pattern
+local function create_management_command(name, func, success_msg, desc)
+    vim.api.nvim_create_user_command(name, function()
+        func()
+        vim.notify(success_msg, vim.log.levels.INFO)
+    end, { desc = desc })
+end
+
+-- Common refresh logic extracted to avoid duplication
+local function update_media_cache(cfg)
+    provider.fetch(function(info)
+        if info then
+            local status = cfg.formats.status_format(info, cfg, cfg.max_width)
+            local lualine = cfg.formats.lualine_format(info, cfg)
+            cache.update_all(status, lualine, info)
+        else
+            cache.clear()
+        end
+    end)
+end
+
 function M.setup(opts)
     local cfg = config.setup(opts)
     
-    local default_formats = formats.get_defaults()
-    local user_formats = opts and opts.formats or {}
-    cfg.formats = utils.deep_merge(default_formats, user_formats)
+    -- Optimize format merging
+    local user_formats = (opts and opts.formats) or {}
+    cfg.formats = utils.deep_merge(formats.get_defaults(), user_formats)
     
     config.update_formats(cfg.formats)
     cache.clear()
     commands.create_commands(cfg)
     
-    vim.api.nvim_create_user_command("MediaReload", function()
-        M.reload()
-        vim.notify("Media Status plugin reloaded", vim.log.levels.INFO)
-    end, { desc = "Reload media status plugin" })
-    
-    vim.api.nvim_create_user_command("MediaRefresh", function()
-        cache.clear()
-        M.refresh()
-        vim.notify("Media status cache refreshed", vim.log.levels.INFO)
-    end, { desc = "Refresh media status cache immediately" })
+    -- Create management commands with unified pattern
+    create_management_command("MediaReload", 
+        function() M.reload() end,
+        "Media Status plugin reloaded", 
+        "Reload media status plugin")
+        
+    create_management_command("MediaRefresh", 
+        function() 
+            cache.clear()
+            M.refresh() 
+        end,
+        "Media status cache refreshed", 
+        "Refresh media status cache immediately")
     
     timer.start(cfg)
 end
 
+-- Simplified API functions
 function M.get_status()
     return cache.get_status()
 end
@@ -47,17 +72,12 @@ function M.get_media_info(callback)
     provider.fetch(callback)
 end
 
+function M.get_config()
+    return config.get()
+end
+
 function M.refresh()
-    local cfg = config.get()
-    provider.fetch(function(info)
-        if info then
-            local status = cfg.formats.status_format(info, cfg, cfg.max_width)
-            local lualine = cfg.formats.lualine_format(info, cfg)
-            cache.update_all(status, lualine, info)
-        else
-            cache.clear()
-        end
-    end)
+    update_media_cache(config.get())
 end
 
 function M.reload()
@@ -66,10 +86,6 @@ function M.reload()
     local cfg = config.get()
     timer.start(cfg)
     M.refresh()
-end
-
-function M.get_config()
-    return config.get()
 end
 
 return M

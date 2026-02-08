@@ -1,17 +1,18 @@
 local M = {}
 
+-- Constants
+local CONSTANTS = {
+    TIMEOUT = 3000,
+    TOOL_PATH_SUFFIX = "../../macos/UniversalMediaTool"
+}
+
 local function parse_media_json(json_str)
     if not json_str or json_str == "" then
         return nil
     end
     
-    -- Simple JSON parsing for known structure
     local success, data = pcall(vim.fn.json_decode, json_str)
-    if not success or not data then
-        return nil
-    end
-    
-    if data.status == "nothing_playing" then
+    if not success or not data or data.status == "nothing_playing" then
         return nil
     end
     
@@ -31,19 +32,15 @@ end
 
 function M.fetch(callback)
     local script_path = debug.getinfo(1).source:match("@?(.*/)") 
-    local tool_path = script_path .. "../../macos/UniversalMediaTool"
+    local tool_path = script_path .. CONSTANTS.TOOL_PATH_SUFFIX
     
     vim.system({ tool_path }, {
-        timeout = 3000, 
+        timeout = CONSTANTS.TIMEOUT, 
         text = true,
     }, function(result)
         vim.schedule(function()
-            if result.code ~= 0 or not result.stdout or result.stdout == "" then
-                callback(nil)
-                return
-            end
-            
-            local parsed = parse_media_json(result.stdout)
+            local parsed = (result.code == 0 and result.stdout and result.stdout ~= "") 
+                and parse_media_json(result.stdout) or nil
             callback(parsed)
         end)
     end)
