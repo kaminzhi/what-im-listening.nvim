@@ -55,7 +55,7 @@ class UniversalMediaProvider {
             "title": title,
             "artist": artist,
             "album": album,
-            "duration": Int(duration * 1000), // Convert to milliseconds
+            "duration": duration,
             "elapsed": elapsed,
             "progress": progress,
             "is_playing": isPlaying,
@@ -90,7 +90,7 @@ class UniversalMediaProvider {
             "title": title,
             "artist": artist,
             "album": album,
-            "duration": Int(duration * 1000), // Convert to milliseconds
+            "duration": duration,
             "elapsed": elapsed,
             "progress": progress,
             "is_playing": isPlaying,

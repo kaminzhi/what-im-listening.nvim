@@ -1,9 +1,25 @@
 local M = {}
 local icons = require("media-status.icons")
 
+local CONSTANTS = {
+    DEFAULT_UPDATE_INTERVAL = 5000, -- Optimized interval
+    DEFAULT_PROGRESS_WIDTH = 15,
+    DEFAULT_KEYMAPS = {
+        play_pause = "<leader>mp",
+        next = "<leader>mn", 
+        previous = "<leader>mP",
+        status = "<leader>ms"
+    },
+    DEFAULT_SEPARATORS = {
+        artist = " - ",
+        time = "/",
+        progress_wrap = "[%s]"
+    }
+}
+
 M.defaults = {
-    update_interval = 1000,  -- Update interval (ms)
-    max_width = 0,           -- Max width for status bar (0=unlimited)
+    update_interval = CONSTANTS.DEFAULT_UPDATE_INTERVAL,
+    max_width = 0,
     
     show_progress = true,
     show_time = true,
@@ -11,22 +27,9 @@ M.defaults = {
     show_album = false,
     
     icons = icons.get_all(),
-    
-    separators = {
-        artist = " - ",
-        time = "/",
-        progress_wrap = "[%s]"
-    },
-    
-    progress_width = 15,
-    
-    -- Keyboard mappings for media control
-    keymaps = {
-        play_pause = "<leader>mp",  -- Toggle play/pause
-        next = "<leader>mn",        -- Next track  
-        previous = "<leader>mP",    -- Previous track
-        status = "<leader>ms"       -- Show media status
-    }
+    separators = CONSTANTS.DEFAULT_SEPARATORS,
+    progress_width = CONSTANTS.DEFAULT_PROGRESS_WIDTH,
+    keymaps = CONSTANTS.DEFAULT_KEYMAPS
 }
 
 M.current = vim.deepcopy(M.defaults)
