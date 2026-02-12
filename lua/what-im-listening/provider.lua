@@ -15,11 +15,16 @@ local function parse_media_json(json_str)
         return nil
     end
     
+    if (not data.title or data.title == "" or data.title == vim.NIL) and 
+       (not data.artist or data.artist == "" or data.artist == vim.NIL) then
+        return nil
+    end
+    
     -- Return structured media info
     return {
-        title = data.title,
-        artist = data.artist,
-        album = data.album,
+        title = (data.title ~= vim.NIL and data.title ~= "") and data.title or nil,
+        artist = (data.artist ~= vim.NIL and data.artist ~= "") and data.artist or nil,
+        album = (data.album ~= vim.NIL and data.album ~= "") and data.album or nil,
         duration = data.duration,
         elapsed = data.elapsed,
         progress = data.progress,
