@@ -15,6 +15,7 @@ A lightweight Neovim plugin that displays currently playing media information in
 
 - Neovim 0.8+
 - macOS
+- Nerd Fonts
 - [nowplaying-cli](https://github.com/kirtan-shah/nowplaying-cli) (`brew install nowplaying-cli`)
 
 ## Installation
