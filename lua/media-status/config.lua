@@ -28,7 +28,7 @@ M.defaults = {
     
     -- Dynamic width adjustment settings
     adaptive_width = true,         -- Enable adaptive width based on window size
-    min_display_width = 80,        -- Minimum width for any display
+    min_display_width = 15,        -- Minimum width for any display (just icon + partial title)
     width_ratio = 0.25,            -- Max ratio of statusline width to use
     
     -- Lualine specific settings

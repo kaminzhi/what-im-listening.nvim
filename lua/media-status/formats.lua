@@ -47,36 +47,32 @@ function M.progress_format(info, config)
     return table.concat(lines, "\n")
 end
 
--- Lualine format: simplified display for statusline
 function M.lualine_format(info, config)
     if not info or not info.title then return "" end
     
     local result = ""
     
-    -- Add platform icon (always show)
     if info.source then
         local platform_icon = config.icons.platforms[info.source] or config.icons.platforms["Unknown"]
         result = platform_icon .. " "
     end
     
-    -- Add title (always show)
     result = result .. info.title
     
-    -- Calculate available width
+    -- width
     if config.adaptive_width then
         local max_width = utils.calculate_lualine_width(config)
         
         if max_width and max_width > 0 then
-            -- Try to add artist if space allows and enabled for lualine
             if config.lualine.show_artist and info.artist then
                 local with_artist = result .. " - " .. info.artist
-                if vim.fn.strchars(with_artist) <= max_width then
+                if utils.count_utf8_chars(with_artist) <= max_width then
                     result = with_artist
                 end
             end
             
-            -- Truncate if still too long
-            if vim.fn.strchars(result) > max_width then
+            -- Truncate
+            if utils.count_utf8_chars(result) > max_width then
                 result = utils.safe_utf8_truncate(result, max_width - 3) .. "..."
             end
         end
@@ -91,13 +87,12 @@ function M.lualine_format(info, config)
     return result
 end
 
--- Complete status bar format
 function M.status_format(info, config, max_width)
     if not info or not info.title then return "" end
     
     local parts = {}
 
-    -- Add platform icon
+    -- platform icon
     if info.source then
         local platform_icon = config.icons.platforms[info.source] or config.icons.platforms["Unknown"]
         table.insert(parts, platform_icon)
@@ -138,7 +133,6 @@ function M.status_format(info, config, max_width)
     return utils.truncate_text(display, max_width)
 end
 
--- Get all default formats
 function M.get_defaults()
     return {
         notify_format = M.notify_format,

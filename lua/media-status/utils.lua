@@ -15,36 +15,77 @@ function M.format_progress_bar(progress, width, config)
     return bar
 end
 
+function M.count_utf8_chars(text)
+    if not text then return 0 end
+    
+    local char_count = 0
+    local i = 1
+    while i <= #text do
+        local byte = string.byte(text, i)
+        if not byte then break end
+        
+        local char_len = 1
+        if byte >= 240 then
+            char_len = 4
+        elseif byte >= 224 then
+            char_len = 3
+        elseif byte >= 192 then
+            char_len = 2
+        end
+        
+        char_count = char_count + 1
+        i = i + char_len
+    end
+    
+    return char_count
+end
+
 function M.truncate_text(text, max_width)
     if not max_width or max_width == 0 then
         return text
     end
-    
-    local char_count = vim.fn.strchars(text)
+
+    local char_count = M.count_utf8_chars(text)
     if char_count <= max_width then
         return text
     end
     
-    if char_count > max_width then
-        return M.safe_utf8_truncate(text, max_width - 3) .. "..."
-    end
-    return text
+    return M.safe_utf8_truncate(text, max_width - 3) .. "..."
 end
 
--- Safe UTF-8 truncation using character count instead of byte count
-function M.safe_utf8_truncate(text, max_width)
-    if not text or not max_width or max_width <= 0 then
+
+function M.safe_utf8_truncate(text, max_chars)
+    if not text or not max_chars or max_chars <= 0 then
         return ""
     end
+
+    local chars = {}
+    local i = 1
+    while i <= #text do
+        local byte = string.byte(text, i)
+        if not byte then break end
+        
+        local char_len = 1
+        if byte >= 240 then
+            char_len = 4
+        elseif byte >= 224 then
+            char_len = 3
+        elseif byte >= 192 then
+            char_len = 2
+        end
+        
+        if i + char_len - 1 <= #text then
+            table.insert(chars, string.sub(text, i, i + char_len - 1))
+        end
+        i = i + char_len
+    end
     
-    -- Use vim's string functions for proper UTF-8 handling
-    local char_count = vim.fn.strchars(text)
-    if char_count <= max_width then
+    -- Return the first max_chars
+    if #chars <= max_chars then
         return text
     end
     
-    -- Truncate by character count, not byte count
-    return vim.fn.strpart(text, 0, max_width)
+    return table.concat(chars, "", 1, max_chars)
 end
 
 function M.is_pwa_app(source)
@@ -59,45 +100,46 @@ function M.deep_merge(base, override)
     return vim.tbl_deep_extend("force", result, override or {})
 end
 
--- Get current window width
 function M.get_window_width()
     local win = vim.api.nvim_get_current_win()
     return vim.api.nvim_win_get_width(win)
 end
 
--- Calculate available width for lualine component
 function M.calculate_lualine_width(config)
     if not config.adaptive_width then
-        return config.max_width
+        return config.max_width or 0
     end
-    
-    -- Get current window width safely
+
     local ok, window_width = pcall(function()
         local win = vim.api.nvim_get_current_win()
         return vim.api.nvim_win_get_width(win)
     end)
     
     if not ok or not window_width then
-        return config.max_width  -- Fallback to max_width if can't get window width
+        return config.max_width or 50
     end
+
+    local calculated_width = math.floor(window_width * (config.width_ratio or 0.25))
+    local min_width = config.min_display_width or 15
     
-    local max_component_width = math.floor(window_width * config.width_ratio)
-    return math.max(config.min_display_width, max_component_width)
+    -- For narrow windows
+    if window_width < 80 then
+        return math.max(10, calculated_width)
+    else
+        return math.max(min_width, calculated_width)
+    end
 end
 
--- Smart truncate based on content priority
 function M.smart_truncate(parts, max_width, config)
     if not max_width or max_width == 0 then
         return table.concat(parts, "")
     end
-    
-    -- Calculate full length using character count
+
     local full_text = table.concat(parts, "")
-    if vim.fn.strchars(full_text) <= max_width then
+    if M.count_utf8_chars(full_text) <= max_width then
         return full_text
     end
-    
-    -- Sort parts by priority (lower number = higher priority)
+
     local content_order = {
         { key = "icon", priority = config.priority_levels.icon },
         { key = "title", priority = config.priority_levels.title },
@@ -107,23 +149,21 @@ function M.smart_truncate(parts, max_width, config)
     }
     
     table.sort(content_order, function(a, b) return a.priority < b.priority end)
-    
-    -- Start with highest priority items
+
     local result_parts = {}
     local current_length = 0
     
     for _, item in ipairs(content_order) do
         if parts[item.key] then
             local part_text = parts[item.key]
-            local potential_length = current_length + vim.fn.strchars(part_text)
+            local potential_length = current_length + M.count_utf8_chars(part_text)
             
             if potential_length <= max_width then
                 table.insert(result_parts, part_text)
                 current_length = potential_length
             else
-                -- Try to fit a truncated version
-                local available_space = max_width - current_length - 3 -- space for "..."
-                if available_space > 5 and item.key == "title" then -- Only truncate title if reasonable space
+                local available_space = max_width - current_length - 3
+                if available_space > 5 and item.key == "title" then
                     local truncated = M.safe_utf8_truncate(part_text, available_space) .. "..."
                     table.insert(result_parts, truncated)
                 end
