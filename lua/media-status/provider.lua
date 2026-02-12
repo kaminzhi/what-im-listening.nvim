@@ -2,8 +2,7 @@ local M = {}
 
 -- Constants
 local CONSTANTS = {
-    TIMEOUT = 3000,
-    TOOL_PATH_SUFFIX = "../../macos/UniversalMediaTool"
+    TIMEOUT = 3000
 }
 
 local function parse_media_json(json_str)
@@ -31,9 +30,18 @@ local function parse_media_json(json_str)
 end
 
 function M.fetch(callback)
-    local script_path = debug.getinfo(1).source:match("@?(.*/)") 
-    local tool_path = script_path .. CONSTANTS.TOOL_PATH_SUFFIX
+    local script_path = debug.getinfo(1).source:match("@?(.*)")
+    local script_dir = script_path:match("(.*)/"
+    local plugin_root = script_dir:match("(.*)/lua/media%-status")
+    local tool_path = plugin_root .. "/macos/UniversalMediaTool"
     
+    if vim.fn.executable(tool_path) == 0 then
+        vim.schedule(function()
+            vim.notify("UniversalMediaTool not found at: " .. tool_path, vim.log.levels.ERROR)
+            callback(nil)
+        end)
+        return
+    end
     vim.system({ tool_path }, {
         timeout = CONSTANTS.TIMEOUT, 
         text = true,
