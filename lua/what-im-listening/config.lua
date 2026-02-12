@@ -1,5 +1,5 @@
 local M = {}
-local icons = require("media-status.icons")
+local icons = require("what-im-listening.icons")
 
 local CONSTANTS = {
     DEFAULT_UPDATE_INTERVAL = 5000, -- Optimized interval

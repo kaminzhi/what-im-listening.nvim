@@ -2,13 +2,13 @@
 local M = {}
 
 -- Import modules
-local config = require("media-status.config")
-local formats = require("media-status.formats")
-local commands = require("media-status.commands")
-local cache = require("media-status.cache")
-local timer = require("media-status.timer")
-local provider = require("media-status.provider")
-local utils = require("media-status.utils")
+local config = require("what-im-listening.config")
+local formats = require("what-im-listening.formats")
+local commands = require("what-im-listening.commands")
+local cache = require("what-im-listening.cache")
+local timer = require("what-im-listening.timer")
+local provider = require("what-im-listening.provider")
+local utils = require("what-im-listening.utils")
 
 -- Utility function for creating commands with consistent notification pattern
 local function create_management_command(name, func, success_msg, desc)

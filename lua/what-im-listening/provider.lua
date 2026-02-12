@@ -31,7 +31,7 @@ end
 
 function M.fetch(callback)
     local script_path = debug.getinfo(1).source:match("@?(.*)")
-    local script_dir = script_path:match("(.*)/"
+    local script_dir = script_path:match("(.*)/")
     local plugin_root = script_dir:match("(.*)/lua/media%-status")
     local tool_path = plugin_root .. "/macos/UniversalMediaTool"
     

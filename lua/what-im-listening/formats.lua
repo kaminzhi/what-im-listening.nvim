@@ -1,5 +1,5 @@
 local M = {}
-local utils = require("media-status.utils")
+local utils = require("what-im-listening.utils")
 
 -- Default notification format
 function M.notify_format(info, config)

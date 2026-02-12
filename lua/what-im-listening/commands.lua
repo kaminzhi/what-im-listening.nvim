@@ -1,6 +1,6 @@
 local M = {}
-local provider = require("media-status.provider")
-local utils = require("media-status.utils")
+local provider = require("what-im-listening.provider")
+local utils = require("what-im-listening.utils")
 
 -- Constants
 local CONSTANTS = {

@@ -1,7 +1,7 @@
 local M = {}
-local provider = require("media-status.provider")
-local cache = require("media-status.cache")
-local config = require("media-status.config")
+local provider = require("what-im-listening.provider")
+local cache = require("what-im-listening.cache")
+local config = require("what-im-listening.config")
 
 local timer = nil
 
