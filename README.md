@@ -48,7 +48,26 @@ require("what-im-listening").setup({
   update_interval = 5000,  -- Update interval in milliseconds
   max_width = 50,          -- Max width for status display (0 = unlimited)
   
-  -- Display options
+  -- Adaptive width settings for lualine
+  adaptive_width = true,         -- Enable adaptive width based on window size
+  min_display_width = 30,        -- Minimum width for any display
+  width_ratio = 0.3,             -- Max ratio of statusline width to use (0.3 = 30%)
+  priority_levels = {            -- Content priority when space is limited
+    icon = 1,                    -- Platform icon (highest priority)
+    title = 2,                   -- Song title
+    artist = 3,                  -- Artist name
+    progress = 4,                -- Progress bar
+    time = 5                     -- Time info (lowest priority)
+  },
+  
+  -- Lualine specific settings (for cleaner statusline display)
+  lualine = {
+    show_progress = false,       -- Don't clutter lualine with progress bar
+    show_time = false,           -- Don't show time in lualine
+    show_artist = true,          -- Show artist name if space allows
+  },
+  
+  -- Display options (for :MediaStatus and other commands)
   show_progress = true,
   show_time = true,
   show_artist = true,
@@ -124,6 +143,70 @@ media.get_media_info(function(info)
     print(info.title, info.artist)
   end
 end)
+```
+
+## Examples
+
+### Adaptive Display for Different Window Sizes
+
+```lua
+require("what-im-listening").setup({
+  adaptive_width = true,
+  width_ratio = 0.25,        -- Use max 25% of statusline width
+  min_display_width = 20,    -- Always show at least 20 characters
+  
+  -- Customize priority levels (1 = highest priority, 5 = lowest)
+  priority_levels = {
+    icon = 1,      -- Always show platform icon
+    title = 2,     -- Song title (will be truncated if needed)
+    artist = 3,    -- Artist name (hidden in narrow windows)
+    progress = 4,  -- Progress bar (hidden in medium windows)
+    time = 5       -- Time info (hidden in wide windows)
+  },
+  
+  show_progress = true,
+  show_time = true,
+  show_artist = true,
+})
+```
+
+### Lualine Setup with Multiple Components
+
+```lua
+require('lualine').setup({
+  sections = {
+    lualine_x = {
+      -- Other components
+      'encoding',
+      'fileformat',
+      
+      -- Media status - will adapt to remaining space
+      {
+        function()
+          return require("what-im-listening").get_lualine_status()
+        end,
+        color = { fg = '#ff6b6b' },  -- Optional: customize color
+        separator = { left = '', right = '' },
+      },
+      
+      'filetype',
+    }
+  }
+})
+```
+
+### Static Width Configuration (Disable Adaptive)
+
+```lua
+-- For users who prefer fixed width display
+require("what-im-listening").setup({
+  adaptive_width = false,  -- Disable adaptive width
+  max_width = 60,          -- Fixed maximum width
+  
+  show_progress = false,   -- Manually control what to show
+  show_time = false,
+  show_artist = true,
+})
 ```
 
 ## Build

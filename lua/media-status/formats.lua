@@ -47,31 +47,47 @@ function M.progress_format(info, config)
     return table.concat(lines, "\n")
 end
 
--- Lualine format: {source} {title} - {artist} (full display, no truncation)
+-- Lualine format: simplified display for statusline
 function M.lualine_format(info, config)
     if not info or not info.title then return "" end
     
     local result = ""
     
-    -- {source} - 平台图标
+    -- Add platform icon (always show)
     if info.source then
         local platform_icon = config.icons.platforms[info.source] or config.icons.platforms["Unknown"]
-        result = platform_icon
+        result = platform_icon .. " "
     end
     
-    -- {title}
-    if result ~= "" then
-        result = result .. " " .. info.title
+    -- Add title (always show)
+    result = result .. info.title
+    
+    -- Calculate available width
+    if config.adaptive_width then
+        local max_width = utils.calculate_lualine_width(config)
+        
+        if max_width and max_width > 0 then
+            -- Try to add artist if space allows and enabled for lualine
+            if config.lualine.show_artist and info.artist then
+                local with_artist = result .. " - " .. info.artist
+                if vim.fn.strchars(with_artist) <= max_width then
+                    result = with_artist
+                end
+            end
+            
+            -- Truncate if still too long
+            if vim.fn.strchars(result) > max_width then
+                result = utils.safe_utf8_truncate(result, max_width - 3) .. "..."
+            end
+        end
     else
-        result = info.title
+        -- Non-adaptive mode: show configured elements for lualine
+        if config.lualine.show_artist and info.artist then
+            result = result .. " - " .. info.artist
+        end
+        
     end
     
-    -- - {artist}
-    if info.artist then
-        result = result .. " - " .. info.artist
-    end
-    
-    -- Don't truncate for lualine, show full content
     return result
 end
 

@@ -26,6 +26,26 @@ M.defaults = {
     show_artist = true,
     show_album = false,
     
+    -- Dynamic width adjustment settings
+    adaptive_width = true,         -- Enable adaptive width based on window size
+    min_display_width = 80,        -- Minimum width for any display
+    width_ratio = 0.25,            -- Max ratio of statusline width to use
+    
+    -- Lualine specific settings
+    lualine = {
+        show_progress = false,     -- Don't show progress in lualine by default
+        show_time = false,         -- Don't show time in lualine by default
+        show_artist = true,        -- Show artist in lualine
+        max_width_ratio = 0.25,    -- Max ratio for lualine component
+    },
+    priority_levels = {            -- Content priority when space is limited
+        icon = 1,                  -- Platform icon (highest priority)
+        title = 2,                 -- Song title
+        artist = 3,                -- Artist name
+        progress = 4,              -- Progress bar
+        time = 5                   -- Time info (lowest priority)
+    },
+    
     icons = icons.get_all(),
     separators = CONSTANTS.DEFAULT_SEPARATORS,
     progress_width = CONSTANTS.DEFAULT_PROGRESS_WIDTH,
